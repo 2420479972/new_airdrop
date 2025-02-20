@@ -59,16 +59,7 @@
           <div class="text-[#3B3D47] text-[12px] text">代币AUN</div>
           <div class="text-[##181818] text-[21px]">{{getNumber(userInfo,'stake_amount',true)}}</div>
           <div class="flex items-center gap-x-[6px]">
-            <div
-                @click="takeOutShow = true"
-                class="py-[3px] px-[7px]  text-center border-[#EF3F3F] border-solid border-[1px] rounded-[3px] text-[#EF3F3F] cursor-pointer">
-              取出
-            </div>
-            <div
-                @click="transferShow = true"
-                class="py-[3px] px-[7px]  text-center border-[#4D6AEA] border-solid border-[1px] rounded-[3px] text-[#4D6AEA] cursor-pointer">
-              转入
-            </div>
+
             <!--            <div-->
             <!--                class="py-[3px] px-[7px]  bg-[#4D6AEA] text-center border-solid border-[1px] rounded-[3px] text-[#fff] cursor-pointer">-->
             <!--              展示数据000-->
@@ -97,15 +88,23 @@
     </div>
   </div>
   <a-modal v-model:open="transferShow" :width="300"  title="请输入你的转入金额" @ok="transferOK" destroyOnClose>
-    <a-input-number v-model:value="transferValue" placeholder="请输入你的转入金额" class="w-full"></a-input-number>
+    <a-form-item label="转入金额">
+      <a-input-number v-model:value="transferValue" :min="0.000000001" placeholder="请输入你的转入金额" class="w-full"></a-input-number>
+    </a-form-item>
   </a-modal>
   <a-modal v-model:open="takeOutShow" :width="300"  title="请输入你的取款金额" @ok="takeOutOK" destroyOnClose>
-    <a-input-number v-model:value="takeOutValue" :min="getNumber(userInfo,'liquidity',true) > 0 ? 0.00000000000001 : 0" :max="getNumber(userInfo,'liquidity',true)" :placeholder="'最大取款金额为' + getNumber(userInfo,'liquidity',true)"  class="w-full"></a-input-number>
+    <a-form-item label="取款金额">
+      <a-input-number v-model:value="takeOutValue" :min="getNumber(userInfo,'liquidity',true) > 0 ? 0.00000000000001 : 0" :max="getNumber(userInfo,'liquidity',true)" :placeholder="'最大取款金额为' + getNumber(userInfo,'liquidity',true)"  class="w-full"></a-input-number>
+    </a-form-item>
   </a-modal>
   <a-modal v-model:open="editUserNumberShow" :width="300"  title="编辑平台用户" @ok="editUserNumberOk" destroyOnClose>
     <div class="space-y-3">
-      <a-input v-model:value="editUser['merchant_add']" placeholder="请输入商户地址" class="w-full"></a-input>
-      <a-input-number v-model:value="editUser['number_user']" placeholder="请输入平台用户" class="w-full"></a-input-number>
+      <a-form-item label="商户地址">
+        <a-input v-model:value="editUser['merchant_add']" placeholder="请输入商户地址" class="w-full"></a-input>
+      </a-form-item>
+      <a-form-item label="平台用户">
+        <a-input-number v-model:value="editUser['number_user']" placeholder="请输入平台用户" class="w-full"></a-input-number>
+      </a-form-item>
     </div>
   </a-modal>
 <!--  <a-modal v-model:open="editTokenAUNShow" :width="300"  title="编辑代币AUN" @ok="editTokenAUNOk" destroyOnClose>-->

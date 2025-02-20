@@ -27,7 +27,7 @@ export const useRead = (functionName:ABIERCType<'ttoken'> | ABIERCType<'ERC1229'
     }else if(paramsList?.value?.length){
         params = {
             ...params,
-            args: paramsList.value
+            args: paramsList.value,
         }
     }
 
@@ -52,9 +52,11 @@ export const useRead = (functionName:ABIERCType<'ttoken'> | ABIERCType<'ERC1229'
         deep: true,
         immediate: true,
     })
-
     return {
         refetch,
         isLoading,
+        error,
+        status,
+        data
     }
 }

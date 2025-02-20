@@ -213,7 +213,7 @@ const columns = [
 
 const data = ref([]);
 
-const pages = ref([0,10])
+const pages = ref([0,50])
 const {refetch} = useRead('get_aggregate_airdrops',pages,{
   type:'ERC1229',
   onSuccess(res){

@@ -13,7 +13,7 @@
                   title="确定删除这条数据吗？"
                   ok-text="确定"
                   cancel-text="取消"
-                  @confirm="confirm"
+                  @confirm="confirm(text)"
               >
                 <a-button type="link" danger>删除</a-button>
               </a-popconfirm>
@@ -113,7 +113,7 @@ const formRef = ref();
 
 const data = ref([]);
 
-const page = ref([0, 10]);
+const page = ref([0, 50]);
 const {refetch} = useRead('get_platform_airdrops', page, {
   type: 'ERC1229',
   onSuccess(res) {
@@ -140,8 +140,18 @@ const onSubmit = () => {
   formRef.value
       .validate()
       .then(() => {
+        const editDataList = data.value.filter((item,_index)=>item.index != editData.value.index).map(item=>item.baseinfo)
+        console.log([
+          ...editDataList,
+          {
+            ...editData.value.baseinfo,
+            time_start: BigInt(editData.value.baseinfo.time_start.unix()),
+            totalamount: parseEther(String(editData.value.baseinfo.totalamount)),
+          }
+        ])
         write([
           [
+              ...editDataList,
             {
               ...editData.value.baseinfo,
               time_start: BigInt(editData.value.baseinfo.time_start.unix()),
@@ -197,8 +207,11 @@ const columns = [
   }
 });
 
-const confirm = ()=>{
-
+const confirm = (_item)=>{
+  const editData = data.value.filter((item,_index)=>item.index != _item.index).map(item=>item.baseinfo)
+  write([
+    editData
+  ])
 }
 
 

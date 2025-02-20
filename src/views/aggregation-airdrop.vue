@@ -3,14 +3,17 @@
     <div class="w-full p-[9px] bg-[#fff] rounded-[5px]">
       <div class="flex items-center gap-x-10">
         <div class="text-[#3B3D47] text-[10px]">聚合空投</div>
-        <a-button type="primary" @click="open=true">发布空投</a-button>
+<!--        <a-button type="primary" @click="open=true">发布空投</a-button>-->
       </div>
       <div class="mt-[12px] w-full">
         <a-table :columns="columns" :data-source="data" :scroll="{ x: 1300, y: 1000 }">
           <template #bodyCell="{ column, text}">
-            <template v-if="column.key == 'already_received'">
-              <a-tag color="#4D6AEA" v-if="text['baseinfo'][column.key] == 0">待审核</a-tag>
-              <a-tag color="#3DB64B" v-else>审批通过</a-tag>
+            <template v-if="column.key === 'action'">
+              <a-button type="link" @click="edit(text)">编辑</a-button>
+            </template>
+            <template v-if="column.key == 'flag'">
+              <a-tag color="#3DB64B"  v-if="text['baseinfo'][column.key]">审批通过</a-tag>
+              <a-tag color="#4D6AEA" v-else>待审核/已下架</a-tag>
             </template>
             <template  v-else-if="column?.render">
               {{column?.render(text?.['baseinfo'][column.key])}}
@@ -121,10 +124,23 @@ const rules: Record<string, Rule[]> = {
 };
 const formRef = ref();
 
+const edit = (rowItem:any)=>{
+  const baseInfo = rowItem.baseinfo
+  editData.value = {
+      ...rowItem.baseinfo,
+      totalamount:getNumber(baseInfo.totalamount),
+      base_amount:getNumber(baseInfo.base_amount),
+      time_start:dayjs(formatTime(baseInfo.time_start).toString(),dateFormat),
+      time_end:dayjs(formatTime(baseInfo.time_end).toString(),dateFormat),
+    already_received:getNumber(baseInfo.already_received)
+  };
+  open.value = true;
+}
 const {write} = useWrite('post_aggregate_airdrop',{
   type:'ERC1229',
   onSuccess: (result) => {
     message.success('发布空投成功')
+    refetch();
   },
   onError: (error) => {
     message.error(error)
@@ -142,6 +158,7 @@ const  onSubmit = () => {
             already_received:parseEther(String(editData.value.already_received)),
             totalamount:parseEther(String(editData.value.totalamount)),
             base_amount:parseEther(String(editData.value.base_amount)),
+            already_received:parseEther(String(editData.value.already_received))
           }
         ])
       })
@@ -156,8 +173,11 @@ const columns = [
     }
   },
   {
-    title: '空投地址',
+    title: '空投代币地址',
     key: 'wallet',
+    render(value:string){
+      return formatAddress(value)
+    }
   },
   {
     title: '空投总量',
@@ -189,8 +209,20 @@ const columns = [
   },
   {
 
-    title: '状态',
+    title: '已空投数量',
     key: 'already_received',
+    render(value:string){
+      return getNumber(value)
+    }
+  },
+  {
+
+    title: '状态',
+    key: 'flag',
+  },
+  {
+    title: '操作',
+    key: 'action',
     fixed: 'right',
   },
 ].map(item => {
@@ -202,10 +234,11 @@ const columns = [
 
 const data = ref([]);
 
-const pages = ref([0,10])
+const pages = ref([0,50])
 const {refetch} = useRead('get_aggregate_airdrops',pages,{
   type:'ERC1229',
   onSuccess(res){
+    console.log(res)
     data.value = res
   }
 })

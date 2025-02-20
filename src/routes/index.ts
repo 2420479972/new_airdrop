@@ -15,13 +15,13 @@ export const menuList = [
         meta: {title: "购买节点"},
         component: () => import('@/views/buy-node.vue')
     },
-    {
-        path:'/check-list',
-        name:"check-list",
-        meta: {title: "空投项目审核列表"},
-        component: () => import('@/views/check-list.vue')
-
-    },
+    // {
+    //     path:'/check-list',
+    //     name:"check-list",
+    //     meta: {title: "空投项目审核列表"},
+    //     component: () => import('@/views/check-list.vue')
+    //
+    // },
     {
         path:'/aggregation-airdrop',
         name:"aggregation-airdrop",

@@ -1,20 +1,21 @@
 <template>
   <div class="w-full h-full p-[12px] bg-[#F4F5F7]">
     <div class="w-full p-[9px] bg-[#fff] rounded-[5px]">
-
+      <div class="text-[#3B3D47] text-[10px]">批量空投</div>
       <div class="mt-[12px] w-full">
+
+        <a-table :columns="nodeColumns" :data-source="nodeList" :scroll="{ x: 1300, y: 1000 }">
+          <template #bodyCell="{ column, text}">
+            <div class="w-full cursor-pointer h-full hover:text-blue-400" @click="clickNode(text?.[column.key])">
+              {{text?.[column.key]}}
+            </div>
+          </template>
+        </a-table>
+        <div class="mt-10"></div>
         <div class="flex items-center gap-x-10 mb-5">
-          <div class="text-[#3B3D47] text-[10px]">批量空投</div>
-         <a-form-item label="选择节点">
-           <a-select
-               v-model:value="selectedValue"
-               style="width: 390px"
-               :options="nodeList"
-           ></a-select>
-         </a-form-item>
           <a-button type="primary" @click="show">批量空投</a-button>
         </div>
-        <a-table :columns="columns" :data-source="tableData" :scroll="{ x: 1300, y: 1000 }" :row-selection="rowSelection">
+        <a-table :columns="vipColumns" :data-source="tableData" :scroll="{ x: 1300, y: 1000 }" :row-selection="rowSelection" :loading="isLoading">
           <template #bodyCell="{ column, text}">
             <template  v-if="column?.render">
               {{column?.render(text?.[column.key])}}
@@ -32,15 +33,14 @@
       :closable="false"
       placement="right"
       title="批量空投"
-      destroy-on-close
-      @close="batchReset"
+      @cancel="batchReset"
   >
     <template #extra>
       <a-button type="text">X</a-button>
     </template>
     <a-form ref="formRef" :model="batch" :rules="rules">
       <div class="space-y-[25px]">
-        <a-form-item name="token" label="空投地址">
+        <a-form-item name="token" label="空投代币地址">
           <a-input v-model:value="batch['token']"></a-input>
         </a-form-item>
         <a-form-item name="baseamount" label="空投数量">
@@ -51,7 +51,7 @@
 
     <template #footer>
       <div class="flex items-center justify-end gap-x-[10px]">
-        <a-button style="margin-right: 8px" @click="open = false">取消</a-button>
+        <a-button style="margin-right: 8px" @click="batchReset">取消</a-button>
         <a-button type="primary" @click="onSubmit">确认</a-button>
       </div>
 
@@ -67,10 +67,18 @@ import {Rule} from "postcss";
 import {useWrite} from "@/hooks/useWrite.ts";
 import {parseEther} from "viem";
 const open = ref(false);
-const dateFormat = 'YYYY-MM-DD HH:mm';
 
+const nodeColumns = [
+  {
+    title: '节点',
+    key: 'node',
+    render(value:string){
+      return formatAddress(value)
+    }
+  },
+]
 
-const columns = [
+const vipColumns = [
   {
     title: 'vip地址',
     key: 'vip_address',
@@ -79,12 +87,14 @@ const columns = [
     }
   },
 ]
-const selectedValue = ref();
 const tableData = ref([]);
 const nodeList = ref([])
-const nodeVipParams = ref(["",0,10])
+const nodeVipParams = ref(["",0,50])
 
-const {refetch} = useRead('get_nodevipinfo',nodeVipParams,{
+
+
+
+const {refetch,data} = useRead('get_nodevipinfo',nodeVipParams,{
   type:'ERC1229',
   onSuccess(value: any) {
     tableData.value = value.vips.map((item: any, index: number) => {
@@ -101,19 +111,28 @@ const {refetch} = useRead('get_nodevipinfo',nodeVipParams,{
   }
 })
 
-const nodePage = ref([0,10])
-useRead('get_node_list',nodePage,{
+watch(()=>data.value,(newVal)=>{
+  tableData.value = newVal?.vips.map((item: any, index: number) => {
+    return {
+      key: index,
+      index: index,
+      text:item,
+      vip_address: item,
+    }
+  })
+},{
+  deep: true,
+})
+
+const nodePage = ref([0,50])
+const {isLoading,error} =  useRead('get_node_list',nodePage,{
   type:'ERC1229',
  async onSuccess(res){
     nodeList.value = res.map(item=>{
       return {
-        label:item,
-        value:item
+        node:item,
       }
     })
-   console.log(res)
-   nodeVipParams.value[0] = nodeList.value[0].value
-   selectedValue.value = nodeList.value[0].value
    refetch()
   },
   onError(error){
@@ -121,10 +140,14 @@ useRead('get_node_list',nodePage,{
   }
 })
 
-watch(()=>selectedValue.value,(newVal)=>{
-  nodeVipParams.value[0] = newVal
-  refetch()
-})
+const clickNode = (address:string)=>{
+  if(nodeVipParams.value[0] == address) return;
+  nodeVipParams.value[0] = address
+  refetch({
+    throwOnError:true
+  })
+
+}
 
 const selectedList = ref([]);
 const rowSelection = ref({
@@ -147,6 +170,7 @@ const rules: Record<string, Rule[]> = {
 };
 
 const batchReset = ()=>{
+  open.value = false;
   formRef.value?.resetFields()
 }
 
@@ -154,7 +178,7 @@ const batchReset = ()=>{
 const {write} = useWrite('platform_airdrop',{
   type:'ERC1229',
   onSuccess(value: any) {
-    message.success('空投成功')
+    message.success('空投发布成功')
     open.value = false
     selectedList.value = [];
     batchReset()
@@ -183,7 +207,6 @@ const show = ()=>{
     message.error('请先选择节点')
     return
   }
-  rowSelection.value.selectedRowKeys = []
   open.value = true
 }
 
