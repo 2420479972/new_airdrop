@@ -3,6 +3,7 @@
     <div class="w-full p-[9px] bg-[#fff] rounded-[5px]">
       <div class="flex gap-x-10 items-center">
         <div class="text-[#3B3D47] text-[10px]">平台空投</div>
+        <a-button type="primary" @click="addNew">发布空投</a-button>
       </div>
       <div class="mt-[12px] w-full">
         <a-table :columns="columns" :data-source="data" :scroll="{ x: 1300, y: 1000 }">
@@ -214,7 +215,11 @@ const confirm = (_item)=>{
   ])
 }
 
-
+const addNew = ()=>{
+  open.value = true;
+  editData.value.baseinfo = {}
+  editData.value.index = data.value.length;
+}
 
 </script>
 
